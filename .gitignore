@@ -1,0 +1,3 @@
+.tmp/
+build/
+src/.terraform/
