@@ -10,35 +10,35 @@ resource "aws_appsync_graphql_api" "appsync_config" {
   authentication_type = "API_KEY"
   name                = "appsync_config"
   schema              = <<EOF
-  type Mutation {
-  	updateSecret(id: ID!, secretString: String): Secret!
-  }
+type Mutation {
+  updateResource(id: ID!, data: String): Resource!
+}
 
-  type Query {
-  	getSecret(id: ID!): Secret
-  }
+type Query {
+  getResource(id: ID!, data: String): Resource!
+}
 
-  type Secret {
-  	id: ID!
-  	secretString: String!
-  }
+type Resource {
+  id: ID!
+  data: String!
+}
 
-  type Subscription {
-  	updatedSecret(id: ID): Secret
-  		@aws_subscribe(mutations: ["updateSecret"])
-  }
+type Subscription {
+  updatedResource(id: ID): Resource
+    @aws_subscribe(mutations: ["updateResource"])
+}
 
-  schema {
-  	query: Query
-  	mutation: Mutation
-  	subscription: Subscription
-  }
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
 EOF
 }
 
 resource "aws_appsync_resolver" "test" {
   api_id           = "${aws_appsync_graphql_api.appsync_config.id}"
-  field            = "updateSecret"
+  field            = "updateResource"
   type             = "Mutation"
   data_source      = "${aws_appsync_datasource.appsync_lambda_datasource.name}"
   request_template = <<EOF
@@ -53,22 +53,6 @@ $util.toJson($context.result)
 EOF
 }
 
-resource "aws_appsync_resolver" "getSecret_resolver" {
-  api_id           = "${aws_appsync_graphql_api.appsync_config.id}"
-  field            = "getSecret"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.appsync_lambda_datasource.name}"
-  request_template = <<EOF
-{
-  "version" : "2017-02-28",
-  "operation": "Invoke",
-  "payload": $util.toJson($context.args)
-}
-EOF
-  response_template = <<EOF
-$util.toJson($context.result)
-EOF
-}
 
 resource "aws_appsync_datasource" "appsync_lambda_datasource" {
   api_id      = "${aws_appsync_graphql_api.appsync_config.id}"

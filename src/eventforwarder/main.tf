@@ -53,6 +53,13 @@ resource "aws_lambda_permission" "secretmngr_updates_permission" {
   source_arn = "${aws_cloudwatch_event_rule.secretmngr_updates.arn}"
 }
 
+resource "aws_lambda_permission" "s3_updates_permission" {
+  statement_id = "s3_updates_permission"
+  action = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.appsync_eventforwarder.function_name}"
+  principal = "s3.amazonaws.com"
+}
+
 resource "aws_cloudwatch_event_target" "appsync_eventforwarder_target" {
   rule      = "${aws_cloudwatch_event_rule.secretmngr_updates.name}"
   target_id = "SendToLambda"

@@ -8,6 +8,7 @@ import logging
 import json
 
 region = os.environ.get("region","us-east-2")
+apiId = os.environ.get("appsync_api_id","")
 
 logger = logging.getLogger("appsync-listener")
 secretmngr = boto3.client("secretsmanager",region_name=region)
@@ -17,7 +18,6 @@ class SecretMngrHandler(Handler):
         pass
 
     def handle(self,event,context):
-        print(event)
         secretId = event.get("detail",{}).get("requestParameters",{}).get("secretId",None)
         if secretId != None:
             logger.info("Received event with secretId : "+str(secretId))
@@ -36,10 +36,10 @@ class SecretMngrHandler(Handler):
         secretValue = secretmngr.get_secret_value(SecretId=secretId)
         return secretValue.get("SecretString")
 
-    def pushUpdates(self,secretId,secretString):
-        appsyncClient = AppSyncClient(authenticationType="API_KEY")
-        secretString = secretString.replace("\"","\\\"")
-        query = json.dumps({"query": "mutation {\n  updateSecret(id:\""+secretId+"\",secretString:\""+secretString+"\") {\n    id\n    secretString\n  }\n}\n"})
+    def pushUpdates(self,id,data):
+        appsyncClient = AppSyncClient(authenticationType="API_KEY",apiId=apiId,region=region)
+        data = data.replace("\"","\\\"")
+        query = json.dumps({"query": "mutation {\n  updateResource(id:\"arn:aws:secretsmanager:::"+id+"\",data:\""+data+"\") {\n    id\n    data\n  }\n}\n"})
         response = appsyncClient.execute(data=query)
         logger.info({
             "response" : response

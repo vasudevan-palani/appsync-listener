@@ -29,9 +29,9 @@ variable "dynamodb_table" {
 #======================Used for local run only===========================
 terraform {
   backend "s3" {
-    bucket = "${var.bucket_name}"
+    bucket = "tfstates.ssm.com"
     region = "us-east-2"
-    dynamodb_table = "${var.dynamodb_table}"
+    dynamodb_table = "tfstates"
     profile = "default"
   }
 }
@@ -50,7 +50,7 @@ provider "aws" {
 data "terraform_remote_state" "network" {
   backend = "s3"
   config {
-    bucket = "${var.bucket_name}"
+    bucket = "tfstates.ssm.com"
     key    = "terraform/ecs-${var.app}-${var.stage}.json"
     region = "us-east-2"
     profile = "default"
