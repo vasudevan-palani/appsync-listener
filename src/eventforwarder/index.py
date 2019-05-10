@@ -16,7 +16,7 @@ from dynamodbhandler import DynamodbHandler
 
 registeredHandlers = {
     "aws.secretsmanager" : SecretMngrHandler(),
-    "aws:s3" : S3Handler()
+    "aws:s3" : S3Handler(),
     "aws:dynamodb" : DynamodbHandler()
 }
 

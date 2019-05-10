@@ -5,7 +5,7 @@ from handler import Handler
 from appsyncclient import AppSyncClient
 
 import logging
-import json
+import json, base64
 
 region = os.environ.get("region","us-east-2")
 apiId = os.environ.get("appsync_api_id","")
@@ -37,9 +37,12 @@ class SecretMngrHandler(Handler):
         return secretValue.get("SecretString")
 
     def pushUpdates(self,id,data):
+        id = "arn:aws:secretsmanager:::"+id
         appsyncClient = AppSyncClient(authenticationType="API_KEY",apiId=apiId,region=region)
-        data = data.replace("\"","\\\"")
-        query = json.dumps({"query": "mutation {\n  updateResource(id:\"arn:aws:secretsmanager:::"+id+"\",data:\""+data+"\") {\n    id\n    data\n  }\n}\n"})
+        datab64 = base64.b64encode(data.encode('utf-8'))
+        logger.info(datab64.decode('utf-8'))
+        query = json.dumps({"query": "mutation {\n  updateResource(id:\""+id+"\",data:\""+datab64.decode('utf-8')+"\") {\n    id\n    data\n  }\n}\n"})
+        logger.info(query)
         response = appsyncClient.execute(data=query)
         logger.info({
             "response" : response
