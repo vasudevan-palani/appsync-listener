@@ -26,7 +26,6 @@ class DynamodbHandler(Handler):
             tableName = eventSourceARN.split(":")[5].split("/")[1]
         except IndexError as e:
             pass
-
         keystring = ""
         for key in keys:
             for keyvalue in keys.get(key,{}):
@@ -39,13 +38,12 @@ class DynamodbHandler(Handler):
         for key in newimage:
             for keyvalue in newimage.get(key,{}):
                 data.update({key:newimage.get(key,{}).get(keyvalue)})
-
         
         if tableName != None and newimage != None :
             
             logger.info(f"Received event for {tableName} for {keystring}")
             
-            self.pushUpdates(f"arn:aws:dynamodb:::{tableName}:{keystring}",str(data))
+            self.pushUpdates(f"arn:aws:dynamodb:::{tableName}:{keystring}",json.dumps(data))
             return {
                 "statusCode":200,
                 "body" : "{}"
@@ -57,10 +55,11 @@ class DynamodbHandler(Handler):
 
     def pushUpdates(self,id,data):
         appsyncClient = AppSyncClient(authenticationType="API_KEY",apiId=apiId,region=region)
-        data = data.replace("\n","")
+        data = data.replace('\\"','"')
         data = data.replace("\"","\\\"")
         logger.info(data)
         query = json.dumps({"query": "mutation {\n  updateResource(id:\""+id+"\",data:\""+data+"\") {\n    id\n    data\n  }\n}\n"})
+        logger.info(query)
         response = appsyncClient.execute(data=query)
         logger.info({
             "response" : response
