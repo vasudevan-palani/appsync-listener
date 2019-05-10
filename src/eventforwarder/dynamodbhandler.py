@@ -45,6 +45,7 @@ class DynamodbHandler(Handler):
             logger.info(f"Received event for {tableName} for {keystring}")
             
             self.pushUpdates(f"arn:aws:dynamodb:::{tableName}:{keystring}",json.dumps(data))
+            self.pushUpdates(f"arn:aws:dynamodb:::{tableName}",json.dumps(data))
             return {
                 "statusCode":200,
                 "body" : "{}"
